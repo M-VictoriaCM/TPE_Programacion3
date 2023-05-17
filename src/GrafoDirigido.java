@@ -23,10 +23,11 @@ public class GrafoDirigido<T> implements Grafo<T> {
     public void borrarVertice(int verticeId) {
         //verifico que el vertice exista en la lista
         if(contieneVertice(verticeId)){
-            //Si lo encuentro lo elimino
+            //Si lo encuentra lo elimina
             listaAdyacente.remove(verticeId);
-        }//elimino los arcos que conectan los vertices
+        }//elimina los arcos que conectan con el vertice eliminado
         for(ArrayList<Arco<T>> lista: listaAdyacente.values()){
+			//Se utiliza removeIf(),para eliminar los arcos cuyos vertice destino es igual al vertice ingresado
             lista.removeIf(tmp -> tmp.getVerticeDestino() == verticeId);
         }
     }
@@ -35,9 +36,12 @@ public class GrafoDirigido<T> implements Grafo<T> {
     public void agregarArco(int verticeOrigen, int verticeDestino, T etiqueta){
         //verifico que exista el origen
         if(!contieneVertice(verticeOrigen)){
+			//Se no existe, agrega el vertice deorigen a la lista con una lista vacia de arcos
             listaAdyacente.put(verticeOrigen, new ArrayList<>());
         }
+		//Creo un nuevo arco con el vertice de origen, vertice destino y la etiqueta
         Arco<T> nuevoArco = new Arco<>(verticeOrigen, verticeDestino, etiqueta);
+		//Agrega el nuevo arco a la lista del vertice origen
         listaAdyacente.get(verticeOrigen).add(nuevoArco);
     }
 
@@ -75,15 +79,22 @@ public class GrafoDirigido<T> implements Grafo<T> {
 
     @Override
     public Arco<T> obtenerArco(int verticeOrigen, int verticeDestino) {
+		//verifica si el grafo contiene el vertice origen 
         if(contieneVertice(verticeOrigen)){
+			//se obtiene la lista de arcos adyacentes al vertice origen
             ArrayList<Arco<T>> lista = listaAdyacente.get(verticeOrigen);
+			//Se recorren la lista de arcos
             for(int i = 0; i < lista.size(); i++){
+				//Se obtiene un arco temporal en la posicion i
                 Arco<T> tmp = lista.get(i);
+				//Se compara el vertice destino del arco temporal  con el destino especificado
                 if(tmp.getVerticeDestino() == verticeDestino){
+					//Si hay conincidencia, devolvemos ese arco
                     return  tmp;
                 }
             }
         }
+		//Si no hay coincidencia o no contiene el vertice origen devuelve null
         return null;
     }
 
@@ -95,49 +106,73 @@ public class GrafoDirigido<T> implements Grafo<T> {
     @Override
     public int cantidadArcos() {
         int contador =0;
+		//Recorre todos los valores de la lisa 
         for(ArrayList<Arco<T>> tmp : listaAdyacente.values()){
+			//se incrementa el contador con el tamaño de cada lista de arcos
             contador += tmp.size();
         }
+		//Devuelve la cantidad total de arcos
         return contador;
     }
 
     @Override
+	/*
+	* Devuelve un iterador que recorre los vertices.
+	* El metodo keySet() obtiene el conjntos de claves de los vertices.
+	* El metodo devuelve un iterador que auida a recorrer vertice por vertice*/
     public Iterator<Integer> obtenerVertices() {
         return listaAdyacente.keySet().iterator();
     }
 
     @Override
     public Iterator<Integer> obtenerAdyacentes(int verticeId) {
+		//obtenemos de la lista de arcos el vertice que ingresa por parametro
         ArrayList<Arco<T>> lista = listaAdyacente.get(verticeId);
+		//Creo una lista temporal para almacenar los vertices adyacentes
         ArrayList<Integer> tmp = new ArrayList<>();
-
+		
+		//Recorro la lista de arcos
         for(int i=0; i< lista.size(); i++){
+			//Se obtiene un arco en la posicion i
             Arco<T> arco = lista.get(i);
+			//Se agrega el vertice destino del arco a la lista temporal
             tmp.add(arco.getVerticeDestino());
         }
+		//Se devuelve un iterador sobre la lista temporal de vertice adyacente, esto permite recorrer uno por uno
         return tmp.iterator();
     }
 
     @Override
     public Iterator<Arco<T>> obtenerArcos() {
+		//Creo una lista temporal para almacenar los arcos
         ArrayList<Arco<T>> tmp = new ArrayList<>();
+		//Se recorre todos los valores de la lista
         for(ArrayList<Arco<T>> lista : listaAdyacente.values()){
+			//Se agregan todos los arcos de cada lista a la lita temporal
             tmp.addAll(lista);
         }
+		//Devuelve un iterador sobre la lista temporal de arcos
         return tmp.iterator();
     }
 
     @Override
     public Iterator<Arco<T>> obtenerArcos(int verticeId) {
+		//Creo una lista temporal para almacenar los arcos relacionador con el vertice qeu ingresa por parametro
         ArrayList<Arco<T>> tmp = new ArrayList<>();
+		//Obtengo la lista de arcos adyacentes al vertice 
         ArrayList<Arco<T>> lista = listaAdyacente.get(verticeId);
-
+		
+		//Recorro la lista de arcos
         for(int i=0; i<lista.size(); i++){
+			//obtengo un arco temporal en la posicion i
             Arco<T>arco = lista.get(i);
+			//Verifico si el arco esta relacionado con el vertice ingresado como origen o destino
             if(arco.getVerticeOrigen() == verticeId || arco.getVerticeDestino() == verticeId){
+				//Si es asi loa grego a la lista temporal
                 tmp.add(arco);
             }
         }
+		//Devuelve un iterador sobre la lista de arcos
         return tmp.iterator();
     }
 
