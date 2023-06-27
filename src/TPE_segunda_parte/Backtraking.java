@@ -4,61 +4,95 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+public class Backtraking<T> {
+    private GrafoNoDirigido<T> grafoNoDirigido;
+    private List<Integer> caminoOptimo = new ArrayList<>();
+    private List<Arco<T>> listaTuneles = new ArrayList<>();
+    private int metrosAConstruir;
+    private int costoTotal;
 
-public class Backtraking {
-    private GrafoNoDirigido<Integer>grafoNoDirigido; 
-    private Arco<?>arco;
-    private ArrayList<Integer> caminoMinimo;
-
-   
-    public Backtraking(GrafoNoDirigido<Integer> grafoNoDirigido) {
+    public void construccionDeTuneles(GrafoNoDirigido<T> grafoNoDirigido) {
         this.grafoNoDirigido = grafoNoDirigido;
-        this.caminoMinimo = new ArrayList<>();
-        this.arco = arco;
-    }
-    public void backtraking() {
-        ArrayList<Integer>tunelActual= new ArrayList<>();
-        Set<Integer>visitados = new HashSet<>();
-        tunelActual.add(arco.getVerticeOrigen());
+        this.caminoOptimo = new ArrayList<>();
+        this.listaTuneles= new ArrayList<>();
+        this.metrosAConstruir = 0;
+        this.costoTotal = 0;
         
-        buscarLaMenorCantidadDeTueneles(tunelActual, visitados);
-    }
-  
+        int N = grafoNoDirigido.cantidadVertices();
+        HashMap<Integer, ArrayList<Arco<T>>> metrosDeTuneles = new HashMap<>();
 
-    private void buscarLaMenorCantidadDeTueneles(ArrayList<Integer>tunelActual, Set<Integer> visitados) {
-        int estacionActual = tunelActual.get(tunelActual.size());
+        // Obtener las distancias en metros entre estaciones del grafo
+        for(int i=0; i< N; i++){
+           metrosDeTuneles.put(i, new ArrayList<>());
+           for(int j=0; j<N; j++){
+                Arco<T>pesoArco = grafoNoDirigido.obtenerArco(i, j);
+                metrosDeTuneles.get(i).add(j, pesoArco);
+           }
+        }
+        List<Integer> caminoActual = new ArrayList<>();
+        Set<Integer>visitado = new HashSet<>();
+        visitado.add(N);
+        List<Integer>metrosDeTuenelUtilizados = new ArrayList<>();
+        metrosDeTuenelUtilizados.add(Integer.MAX_VALUE);
         
-        if(estacionActual == arco.getVerticeDestino()){
-            if(caminoMinimo.isEmpty() || tunelActual.size() < caminoMinimo.size()){
-                caminoMinimo = new ArrayList<>(tunelActual);
+        creacionDeTuneles(0, N, caminoActual, visitado, metrosDeTuneles,metrosDeTuenelUtilizados);
+    }
+
+    private void creacionDeTuneles(int nivel, int N, List<Integer> caminoActual, Set<Integer> visitado, HashMap<Integer, ArrayList<Arco<T>>> metrosDeTuneles, List<Integer> metrosDeTuenelUtilizados) {
+        if(nivel == N){
+            int metrosTunelTotal = calcularMetrosTunelTotal(caminoActual, metrosDeTuneles);
+            if( metrosTunelTotal < metrosDeTuenelUtilizados.get(0)){
+                metrosDeTuenelUtilizados.set(0, metrosTunelTotal);
+                caminoOptimo.clear();
+                caminoOptimo.addAll(caminoActual);
+                listaTuneles.clear();
+                listaTuneles.addAll(obtenerListaTuneles(caminoActual, metrosDeTuneles));
+                metrosAConstruir = metrosTunelTotal;
+                costoTotal = calcularTiempoTotal(listaTuneles);
             }
         }else{
-            Iterator<Integer> estacionVecina = grafoNoDirigido.obtenerAdyacentes(estacionActual);
-            while(estacionVecina.hasNext()){
-                int siguienteEstacion = estacionVecina.next();
-                if(!visitados.contains(siguienteEstacion)){
-                    tunelActual.add(siguienteEstacion);
-                    visitados.add(siguienteEstacion);
+            for(int i= 0; i< N; i++){
+                if(!visitado.contains(i)){
+                    visitado.add(i);
+                    caminoActual.add(i);
                     
-                    buscarLaMenorCantidadDeTueneles(tunelActual, visitados);
+                    creacionDeTuneles(nivel+1, N, caminoActual, visitado, metrosDeTuneles, metrosDeTuenelUtilizados);
+                    visitado.remove(i);
+                    caminoActual.remove(caminoActual.size()-1);
                     
-                    visitados.remove(siguienteEstacion);
-                    tunelActual.remove(tunelActual.size() -1);
                 }
             }
         }
     }
+
     
-    public void imprimirCamino(){
-        if(caminoMinimo.isEmpty()){
-            System.out.println("No se encontro un camino valido");
-        }else{
-            System.out.println("E camino mas corto es: ");
-            for(int estacion: caminoMinimo){
-                System.out.println(estacion+" ");
-            }
-            System.out.println("");
+    private int calcularMetrosTunelTotal(List<Integer> caminoActual, HashMap<Integer, ArrayList<Arco<T>>> metrosDeTuneles) {
+        int metrosTunelTotal =0;
+        for(int i=0; i< caminoActual.size()-1; i++){
+            int estacionesA = caminoActual.get(i); 
+            int estacionesB = caminoActual.get(i+1);
+            
+            metrosTunelTotal += ((int)(metrosDeTuneles.get(estacionesA).get(estacionesB).getEtiqueta()));
         }
+        return metrosTunelTotal;
     }
-  
+
+    private int calcularTiempoTotal(List<Arco<T>> listaTuneles) {
+        int tiempoTotal = 0;
+        for(Arco<T>tunel : listaTuneles){
+            int longitud = (int)tunel.getEtiqueta();
+            tiempoTotal += longitud;
+        }
+        return tiempoTotal;
+    }
+
+    private List<Arco<T>> obtenerListaTuneles(List<Integer> caminoActual, HashMap<Integer, ArrayList<Arco<T>>> metrosDeTuneles) {
+         List<Arco<T>>listTuneles = new ArrayList<>();
+        for(int i=0; i< caminoActual.size() -1; i++){
+            int estacionesA = caminoActual.get(i);
+            int estacionesB = caminoActual.get(i+1);
+            listaTuneles.add(metrosDeTuneles.get(estacionesA).get(estacionesB));
+        }
+        return listTuneles;
+    } 
 }

@@ -7,9 +7,8 @@ public class Main {
 	CSVReader reader = new CSVReader(path);
 	reader.read();
         
-        Backtraking b = new Backtraking(grafoNoDirigido);
-        b.backtraking();
-        b.imprimirCamino();
+        Backtraking b = new Backtraking();
+        b.construccionDeTuneles(grafoNoDirigido);
     }
 	
 }
